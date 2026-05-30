@@ -1,4 +1,4 @@
-const VOCABULARY = [
+var VOCABULARY = [
 {it:"voce",de:"Stimme",cat:"Substantive",pl:"voci"},
 {it:"nome",de:"Name",cat:"Substantive",pl:"nomi"},
 {it:"sera",de:"Abend",cat:"Substantive",pl:"sere"},
