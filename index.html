@@ -23,6 +23,7 @@ header h1{font-size:1.4rem;padding:10px 0;font-weight:700}
 .card-front{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
 .card-back{background:#fff;color:#2c3e50;transform:rotateY(180deg);border:2px solid #667eea}
 .word-it{font-size:2.2rem;font-weight:700;margin-bottom:6px}
+.word-pl{font-size:1.1rem;opacity:.55;margin-bottom:2px}
 .word-de{font-size:2rem;font-weight:600;color:#2c3e50;margin-bottom:8px}
 .flip-hint{font-size:.82rem;opacity:.65;margin-top:18px}
 .status-display{font-size:.82rem;margin-top:10px;padding:3px 14px;border-radius:12px;display:inline-block}
@@ -110,6 +111,7 @@ header h1{font-size:1.15rem}
 <div class="card" id="card" onclick="flipCard()">
 <div class="card-front">
 <div class="word-it" id="wordIt"></div>
+<div class="word-pl" id="wordPl"></div>
 <div class="flip-hint">Zum Umdrehen klicken</div>
 </div>
 <div class="card-back">
@@ -152,6 +154,7 @@ header h1{font-size:1.15rem}
 <table>
 <thead><tr>
 <th>Italienisch</th>
+<th>Plural</th>
 <th>Deutsch</th>
 <th>Kategorie</th>
 <th>Status</th>
@@ -200,6 +203,9 @@ function show(i){
 currentIdx=i<0?0:i>=VOCABULARY.length?VOCABULARY.length-1:i;
 var v=VOCABULARY[currentIdx];
 document.getElementById('wordIt').textContent=v.it;
+var pel=document.getElementById('wordPl');
+if(v.pl){pel.textContent=v.pl;pel.style.display='block'}
+else pel.style.display='none';
 document.getElementById('wordDe').textContent=v.de;
 var c=document.getElementById('card');c.classList.remove('flipped');isFlipped=false;
 var a=act(),p=a.indexOf(currentIdx);
@@ -291,11 +297,11 @@ cnt++;
 var sl=['Neutral','Richtig','Falsch','Ausgeblendet'][s];
 var sc=['neutral','right','wrong','hidden'][s];
 h+='<tr'+(s===S.HIDDEN?' class="hidden-row"':'')+'>';
-h+='<td>'+v.it+'</td><td>'+v.de+'</td><td>'+v.cat+'</td>';
+h+='<td>'+v.it+'</td><td>'+(v.pl||'')+'</td><td>'+v.de+'</td><td>'+v.cat+'</td>';
 h+='<td><span class="stat-cell '+sc+'" onclick="cycleStatus('+i+')">'+sl+' ↻</span></td>';
 h+='</tr>';
 }
-if(!cnt)h='<tr><td colspan="4" class="empty-state">Keine Vokabeln gefunden</td></tr>';
+if(!cnt)h='<tr><td colspan="5" class="empty-state">Keine Vokabeln gefunden</td></tr>';
 tb.innerHTML=h;
 }
 
@@ -306,11 +312,11 @@ if(i===currentIdx)show(i);
 }
 
 function exportCSV(){
-var csv='Italienisch;Deutsch;Kategorie;Status\n';
+var csv='Italienisch;Plural;Deutsch;Kategorie;Status\n';
 for(var i=0;i<VOCABULARY.length;i++){
 var v=VOCABULARY[i],s=gs(i);
 var sl=['Neutral','Richtig','Falsch','Ausgeblendet'][s];
-csv+=v.it+';'+v.de+';'+v.cat+';'+sl+'\n';
+csv+=v.it+';'+(v.pl||'')+';'+v.de+';'+v.cat+';'+sl+'\n';
 }
 var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
 var a=document.createElement('a');
