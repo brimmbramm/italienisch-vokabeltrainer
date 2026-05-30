@@ -988,7 +988,6 @@ const VOCABULARY = [
 ];
 
 const CONJUGATIONS = {
-const CONJUGATIONS = {
   "essere":{"io":"sono","tu":"sei","lui":"è","noi":"siamo","voi":"siete","loro":"sono"},
   "avere":{"io":"ho","tu":"hai","lui":"ha","noi":"abbiamo","voi":"avete","loro":"hanno"},
   "andare":{"io":"vado","tu":"vai","lui":"va","noi":"andiamo","voi":"andate","loro":"vanno"},
