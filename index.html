@@ -85,6 +85,23 @@ tr.hidden-row td{opacity:.4;background:#fafafa}
 .toolbar{display:flex;gap:8px;justify-content:flex-end;margin-top:8px;flex-wrap:wrap}
 .toolbar .btn-csv{background:#2c3e50;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-size:.8rem;cursor:pointer}
 .toolbar .btn-csv:hover{background:#1a252f}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat-card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 1px 6px rgba(0,0,0,0.06)}
+.stat-card.full{grid-column:1/-1}
+.stat-card h3{font-size:.95rem;color:#667eea;margin-bottom:8px;font-weight:600}
+.stat-card .num{font-size:2rem;font-weight:700;color:#2c3e50}
+.stat-card .sub{font-size:.8rem;color:#999;margin-top:2px}
+.stat-bar{margin:6px 0;display:flex;height:22px;border-radius:6px;overflow:hidden}
+.stat-bar .seg{display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:600;color:#fff;transition:width .3s}
+.stat-bar .seg.neutral{background:#e2e3e5;color:#383d41}
+.stat-bar .seg.right{background:#27ae60}
+.stat-bar .seg.wrong{background:#f39c12}
+.stat-bar .seg.hidden{background:#95a5a6}
+.stat-card table{width:100%;font-size:.85rem}
+.stat-card td{padding:4px 0;border:none}
+.stat-card td:last-child{text-align:right;font-weight:600}
+.stat-card tr:hover td{background:transparent}
+.stat-card .cat-row td{font-weight:600;padding-top:8px;border-top:1px solid #eee;color:#667eea}
 @media(max-width:500px){
 #app{padding:10px}
 header h1{font-size:1.15rem}
@@ -153,6 +170,7 @@ header h1{font-size:1.15rem}
 <div class="table-wrap">
 <table>
 <thead><tr>
+<th>Artikel</th>
 <th>Italienisch</th>
 <th>Plural</th>
 <th>Deutsch</th>
@@ -165,6 +183,10 @@ header h1{font-size:1.15rem}
 <div class="toolbar">
 <button class="btn-csv" onclick="exportCSV()">CSV exportieren</button>
 </div>
+</section>
+
+<section id="view-stats" class="view">
+<div class="stats-grid" id="statsGrid"></div>
 </section>
 </main>
 
@@ -202,7 +224,7 @@ function nxt(from,fwd){for(var i=from,stp=fwd?1:-1,t=0;t<VOCABULARY.length;t++){
 function show(i){
 currentIdx=i<0?0:i>=VOCABULARY.length?VOCABULARY.length-1:i;
 var v=VOCABULARY[currentIdx];
-document.getElementById('wordIt').textContent=v.it;
+document.getElementById('wordIt').textContent=v.art?v.art+' '+v.it:v.it;
 var pel=document.getElementById('wordPl');
 if(v.pl){pel.textContent=v.pl;pel.style.display='block'}
 else pel.style.display='none';
@@ -245,9 +267,10 @@ function showView(v){
 document.querySelectorAll('.view').forEach(function(x){x.classList.remove('active')});
 document.getElementById('view-'+v).classList.add('active');
 document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
-var m={learn:'Lernen',list:'Alle'};
+var m={learn:'Lernen',list:'Alle',stats:'Statistik'};
 document.querySelectorAll('.tab').forEach(function(t){if(t.textContent.trim()===m[v])t.classList.add('active')});
 if(v==='list')renderTable();
+if(v==='stats')renderStats();
 }
 
 
@@ -291,17 +314,17 @@ var q=document.getElementById('searchInput').value.toLowerCase().trim();
 var h='',cnt=0;
 for(var i=0;i<VOCABULARY.length;i++){
 var v=VOCABULARY[i],s=gs(i);
-if(q&&!v.it.toLowerCase().includes(q)&&!v.de.toLowerCase().includes(q)&&!v.cat.toLowerCase().includes(q))continue;
+if(q&&!v.it.toLowerCase().includes(q)&&!(v.art||'').toLowerCase().includes(q)&&!v.de.toLowerCase().includes(q)&&!v.cat.toLowerCase().includes(q))continue;
 if(curFilter!=='all'&&(curFilter==='neutral'&&s!==S.NEUTRAL||curFilter==='right'&&s!==S.RIGHT||curFilter==='wrong'&&s!==S.WRONG||curFilter==='hidden'&&s!==S.HIDDEN))continue;
 cnt++;
 var sl=['Neutral','Richtig','Falsch','Ausgeblendet'][s];
 var sc=['neutral','right','wrong','hidden'][s];
 h+='<tr'+(s===S.HIDDEN?' class="hidden-row"':'')+'>';
-h+='<td>'+v.it+'</td><td>'+(v.pl||'')+'</td><td>'+v.de+'</td><td>'+v.cat+'</td>';
+h+='<td>'+(v.art||'')+'</td><td>'+v.it+'</td><td>'+(v.pl||'')+'</td><td>'+v.de+'</td><td>'+v.cat+'</td>';
 h+='<td><span class="stat-cell '+sc+'" onclick="cycleStatus('+i+')">'+sl+' ↻</span></td>';
 h+='</tr>';
 }
-if(!cnt)h='<tr><td colspan="5" class="empty-state">Keine Vokabeln gefunden</td></tr>';
+if(!cnt)h='<tr><td colspan="6" class="empty-state">Keine Vokabeln gefunden</td></tr>';
 tb.innerHTML=h;
 }
 
@@ -312,11 +335,11 @@ if(i===currentIdx)show(i);
 }
 
 function exportCSV(){
-var csv='Italienisch;Plural;Deutsch;Kategorie;Status\n';
+var csv='Artikel;Italienisch;Plural;Deutsch;Kategorie;Status\n';
 for(var i=0;i<VOCABULARY.length;i++){
 var v=VOCABULARY[i],s=gs(i);
 var sl=['Neutral','Richtig','Falsch','Ausgeblendet'][s];
-csv+=v.it+';'+(v.pl||'')+';'+v.de+';'+v.cat+';'+sl+'\n';
+csv+=(v.art||'')+';'+v.it+';'+(v.pl||'')+';'+v.de+';'+v.cat+';'+sl+'\n';
 }
 var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
 var a=document.createElement('a');
@@ -402,6 +425,47 @@ return result;
 }
 
 
+
+function renderStats(){
+var total=VOCABULARY.length;
+var counts={0:0,1:0,2:0,3:0};
+for(var i=0;i<total;i++)counts[gs(i)]++;
+var catCounts={};
+for(var i=0;i<total;i++){
+var v=VOCABULARY[i];
+catCounts[v.cat]=catCounts[v.cat]||{total:0,0:0,1:0,2:0,3:0};
+catCounts[v.cat].total++;
+catCounts[v.cat][gs(i)]++;
+}
+var a=act();
+var known=counts[1];
+var learning=a.length-known;
+var h='';
+h+='<div class="stat-card"><h3>Gesamt</h3><div class="num">'+total+'</div><div class="sub">Vokabeln</div></div>';
+h+='<div class="stat-card"><h3>Gelernt</h3><div class="num">'+known+'</div><div class="sub">von '+total+' ('+Math.round(known/total*100)+'%)</div></div>';
+h+='<div class="stat-card"><h3>Zum Lernen</h3><div class="num">'+(total-counts[3])+'</div><div class="sub">Nicht ausgeblendet</div></div>';
+h+='<div class="stat-card"><h3>Aktive Session</h3><div class="num">'+a.length+'</div><div class="sub">Im Durchgang ('+learning+' unbekannt)</div></div>';
+h+='<div class="stat-card full"><h3>Verteilung</h3><div class="stat-bar">';
+var segs=[{k:1,l:'Richtig',c:'right'},{k:2,l:'Falsch',c:'wrong'},{k:0,l:'Neutral',c:'neutral'},{k:3,l:'Ausgebl.',c:'hidden'}];
+for(var j=0;j<segs.length;j++){
+var pct=total?Math.round(counts[segs[j].k]/total*100):0;
+if(pct)h+='<div class="seg '+segs[j].c+'" style="width:'+pct+'%">'+pct+'%</div>';
+}
+h+='</div></div>';
+h+='<div class="stat-card full"><h3>Nach Kategorie</h3><table><tbody>';
+var cats=Object.keys(catCounts).sort();
+for(var j=0;j<cats.length;j++){
+var c=cats[j],cc=catCounts[c];
+var pct=cc.total?Math.round((cc[1]||0)/cc.total*100):0;
+h+='<tr class="cat-row"><td>'+c+'</td><td>'+cc.total+'</td><td>'+pct+'% gelernt</td></tr>';
+h+='<tr><td>Richtig</td><td>'+(cc[1]||0)+'</td><td></td></tr>';
+h+='<tr><td>Falsch</td><td>'+(cc[2]||0)+'</td><td></td></tr>';
+h+='<tr><td>Neutral</td><td>'+(cc[0]||0)+'</td><td></td></tr>';
+h+='<tr><td>Ausgeblendet</td><td>'+(cc[3]||0)+'</td><td></td></tr>';
+}
+h+='</tbody></table></div>';
+document.getElementById('statsGrid').innerHTML=h;
+}
 
 show(wrand()>=0?wrand():0);
 </script>
