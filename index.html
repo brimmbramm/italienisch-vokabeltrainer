@@ -31,7 +31,11 @@ header h1{font-size:1.4rem;padding:10px 0;font-weight:700}
 .status-display.right{background:#d4edda;color:#155724}
 .status-display.wrong{background:#fff3cd;color:#856404}
 .status-display.hidden{background:#f8d7da;color:#721c24}
-.card-actions{display:flex;gap:8px;margin-bottom:10px}
+.card-actions{display:flex;gap:8px;margin-bottom:10px;list-style:none;padding:0}
+.direction-toggle{display:flex;gap:4px;justify-content:center;margin-bottom:10px}
+.dir-btn{padding:6px 16px;border:2px solid #ddd;border-radius:8px;background:#fff;color:#666;cursor:pointer;font-size:.85rem;font-weight:500;transition:all .2s}
+.dir-btn.active{background:#2c3e50;color:#fff;border-color:#2c3e50}
+.dir-btn:hover:not(.active){border-color:#999}
 .card-actions .btn{flex:1;padding:11px;font-size:.95rem;font-weight:600;border:none;border-radius:10px;cursor:pointer;transition:all .15s}
 .btn-right{background:#27ae60;color:#fff}
 .btn-right:hover{background:#219a52}
@@ -139,10 +143,15 @@ header h1{font-size:1.15rem}
 </div>
 </div>
 
+<div class="direction-toggle">
+<button class="dir-btn active" onclick="setDirection('it-de')" id="dirItDe">IT → DE</button>
+<button class="dir-btn" onclick="setDirection('de-it')" id="dirDeIt">DE → IT</button>
+</div>
+
 <ul class="card-actions">
-<li style="flex:1"><button class="btn btn-wrong" id="btnWrong" onclick="rateWord(3)">Falsch</button></li>
-<li style="flex:1"><button class="btn btn-hide" id="btnHide" onclick="hideWord()">Ausblenden</button></li>
-<li style="flex:1"><button class="btn btn-right" id="btnRight" onclick="rateWord(1)">Richtig</button></li>
+<li style="flex:1"><button class="btn btn-wrong" onclick="rateWord(3)">Falsch</button></li>
+<li style="flex:1"><button class="btn btn-hide" onclick="hideWord()">Ausblenden</button></li>
+<li style="flex:1"><button class="btn btn-right" onclick="rateWord(1)">Richtig</button></li>
 </ul>
 
 <div class="navigation">
@@ -210,7 +219,7 @@ header h1{font-size:1.15rem}
 <script>
 const S={NEUTRAL:0,RIGHT:1,WRONG:2,HIDDEN:3};
 let wordStatus=JSON.parse(localStorage.getItem('vocabStatus')||'{}');
-let currentIdx=0,isFlipped=false;
+let currentIdx=0,isFlipped=false,direction='it-de';
 
 function gs(i){return wordStatus[i]!==undefined?wordStatus[i]:S.NEUTRAL}
 function ss(i,s){wordStatus[i]=s;localStorage.setItem('vocabStatus',JSON.stringify(wordStatus))}
@@ -225,11 +234,19 @@ function nxt(from,fwd){for(var i=from,stp=fwd?1:-1,t=0;t<VOCABULARY.length;t++){
 function show(i){
 currentIdx=i<0?0:i>=VOCABULARY.length?VOCABULARY.length-1:i;
 var v=VOCABULARY[currentIdx];
+if(direction==='de-it'){
+document.getElementById('wordIt').textContent=v.de;
+var pel=document.getElementById('wordPl');
+if(pel)pel.style.display='none';
+document.getElementById('wordDe').textContent=v.art?v.art+' '+v.it:v.it;
+if(v.pl)document.getElementById('wordDe').textContent+=' ('+v.pl+')';
+}else{
 document.getElementById('wordIt').textContent=v.art?v.art+' '+v.it:v.it;
 var pel=document.getElementById('wordPl');
 if(v.pl){pel.textContent=v.pl;pel.style.display='block'}
 else pel.style.display='none';
 document.getElementById('wordDe').textContent=v.de;
+}
 var c=document.getElementById('card');c.classList.remove('flipped');isFlipped=false;
 var a=act(),p=a.indexOf(currentIdx);
 document.getElementById('counter').textContent=(p>=0?p+1:'-')+' / '+a.length;
@@ -244,6 +261,11 @@ if(document.getElementById('view-list').classList.contains('active'))renderTable
 }
 
 function updateButtons(){}
+function setDirection(d){
+direction=d;
+document.querySelectorAll('.dir-btn').forEach(function(b){b.classList.toggle('active',b.id==='dir'+(d==='it-de'?'ItDe':'DeIt'))});
+show(currentIdx);
+}
 
 function flipCard(){document.getElementById('card').classList.toggle('flipped');isFlipped=!isFlipped}
 
