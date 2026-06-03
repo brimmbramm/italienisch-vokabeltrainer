@@ -271,15 +271,14 @@ function flipCard(){document.getElementById('card').classList.toggle('flipped');
 
 function rateWord(w){
 ss(currentIdx,w===1?S.RIGHT:S.WRONG);
-var n=wrand();
-if(n>=0)show(n);
+document.getElementById('card').classList.remove('flipped');isFlipped=false;
+setTimeout(function(){var n=wrand();if(n>=0)show(n)},500);
 }
 
 function hideWord(){
 ss(currentIdx,S.HIDDEN);
-var n=wrand();
-if(n>=0)show(n);
-else{var p=nxt(currentIdx,false);if(p>=0)show(p)}
+document.getElementById('card').classList.remove('flipped');isFlipped=false;
+setTimeout(function(){var n=wrand();if(n>=0)show(n);else{var p=nxt(currentIdx,false);if(p>=0)show(p)}},500);
 }
 
 function nextWord(){var n=nxt(currentIdx,true);if(n>=0)show(n)}
